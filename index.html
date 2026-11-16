@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090d18">
+<title>Guildglory | Control Center</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--line:#263247;--muted:#91a0b8;--text:#edf3ff;--green:#37d69a;--red:#ff667d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#1d2140,transparent 38%),var(--bg);color:var(--text);font:15px system-ui,Arial;min-height:100vh}
+.wrap{max-width:1080px;margin:auto;padding:26px 16px}.top,.brand,.statusrow,.loghead{display:flex;align-items:center;justify-content:space-between;gap:13px}.brand{justify-content:flex-start}.logo{width:45px;height:45px;border-radius:14px;background:linear-gradient(135deg,#a08cff,#5a51d6);display:grid;place-items:center;font-size:21px;font-weight:900}h1{font-size:21px;margin:0}.sub,.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:23px}.card{background:#111827ed;border:1px solid var(--line);border-radius:17px;padding:20px;min-width:0}.wide{grid-column:1/-1}h2{font-size:14px;margin:0 0 16px}.status{font-size:22px;font-weight:800}.dot{width:11px;height:11px;border-radius:50%;background:var(--red)}.dot.on{background:var(--green);box-shadow:0 0 14px var(--green)}
+button{border:0;border-radius:10px;padding:12px 16px;background:linear-gradient(135deg,#8e80ff,#6559e8);color:white;font-weight:700;cursor:pointer}button.secondary{background:#263247}button.stop{background:#542637;color:#ffb5c0}button:disabled{opacity:.4;cursor:not-allowed}.actions{display:flex;gap:9px;margin:21px 0;flex-wrap:wrap}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:#0c1321;border:1px solid #202c40;border-radius:11px;padding:13px}.metric strong{display:block;margin-top:5px}.terminal{height:235px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#070b12;border:1px solid #202b3d;border-radius:11px;padding:13px;color:#b8c8df;font:12px/1.6 ui-monospace,monospace}input{min-width:0;flex:1;background:#0b1220;color:white;border:1px solid var(--line);border-radius:10px;padding:13px;outline:none}form{display:flex;gap:9px;margin-top:12px}.toast{color:#ffb5c0;min-height:20px;margin-top:10px;font-size:13px}.notice{color:var(--muted);font-size:12px;line-height:1.6;margin-top:13px}.pill{border:1px solid var(--line);border-radius:99px;padding:7px 10px;color:var(--muted);font-size:11px}.login{max-width:420px;margin:12vh auto}.login input{width:100%;margin:15px 0}.login button{width:100%}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.pill{display:none}.wrap{padding:18px 12px}.terminal{height:220px}}
+</style>
+</head>
+<body>
+{% if not authenticated %}
+<div class="wrap"><section class="card login">
+<div class="brand"><div class="logo">G</div><div><h1>Guildglory</h1><div class="sub">Secure control center</div></div></div>
+<h2 style="margin-top:28px">Dashboard login</h2>
+<input id="password" type="password" placeholder="Dashboard password">
+<button onclick="login()">Sign in</button><div id="message" class="toast"></div>
+<div class="notice">Default password: 123456. Change DASHBOARD_PASSWORD before exposing this dashboard publicly.</div>
+</section></div>
+<script>
+async function login(){let m=document.getElementById('message');try{let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('password').value})});let d=await r.json();if(!r.ok)throw Error(d.error);location.reload()}catch(e){m.textContent=e.message}}
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+</script>
+{% else %}
+<div class="wrap">
+<header class="top"><div class="brand"><div class="logo">G</div><div><h1>Guildglory</h1><div class="sub">Application control center</div></div></div><div><span class="pill">WEB DASHBOARD</span> <button class="secondary" onclick="logout()">Log out</button></div></header>
+<main class="grid">
+<section class="card"><h2>APPLICATION STATUS</h2><div class="statusrow" style="justify-content:flex-start"><span id="dot" class="dot"></span><div><div id="state" class="status">Checking…</div><div id="detail" class="sub">Connecting</div></div></div>
+<div class="actions"><button id="start" onclick="action('start')">▶ Start application</button><button id="stop" class="stop" onclick="action('stop')">■ Stop</button><button class="secondary" onclick="action('restart')">↻ Restart</button></div>
+<div class="metrics"><div class="metric"><span class="muted">Process ID</span><strong id="pid">—</strong></div><div class="metric"><span class="muted">run.py</span><strong id="launcher">—</strong></div></div><div id="message" class="toast"></div></section>
+<section class="card"><h2>SYSTEM INFO</h2><p class="muted">Control the Python launcher and inspect its output. Existing terminal prompts inside the program are not automatically turned into web forms.</p><div class="metric"><span class="muted">Runtime</span><strong>Python / Flask</strong></div><div class="metric" style="margin-top:10px"><span class="muted">Health endpoint</span><strong>/health</strong></div></section>
+<section class="card wide"><div class="loghead"><h2>CONSOLE OUTPUT</h2><button class="secondary" onclick="refreshLogs()">↻ Refresh</button></div><pre id="logs" class="terminal">Waiting for logs…</pre></section>
+<section class="card wide"><div class="loghead"><h2>RUN.PY COMMAND TERMINAL</h2><span class="pill">CUSTOM APP COMMANDS</span></div>
+<p class="muted">Type any command your run.py program supports and send it directly to the running process. This does not execute an operating-system shell command.</p>
+<pre id="termout" class="terminal">Terminal ready. Start run.py, then enter your custom application command below.</pre>
+<form id="sendform"><input id="sendcmd" placeholder="Enter your custom command…" autocomplete="off" spellcheck="false"><button type="submit">Send</button></form>
+<div id="sendmessage" class="toast"></div>
+<div class="notice">Commands are sent as one line to run.py through stdin. Your run.py must read stdin (for example with input()) and handle the command. Replies printed by run.py appear in Console Output.</div>
+</section></main></div>
+<script>
+async function api(p,m='GET',body){let r=await fetch(p,{method:m,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});let d=await r.json();if(r.status===401){location.reload();throw Error('Please sign in again')}if(!r.ok)throw Error(d.error||'Request failed');return d}
+async function refreshStatus(){try{let d=await api('/api/status');document.getElementById('state').textContent=d.running?'Running':'Stopped';document.getElementById('dot').className='dot'+(d.running?' on':'');document.getElementById('detail').textContent=d.running?'Guildglory process is active':'Application is not running';document.getElementById('pid').textContent=d.pid??'—';document.getElementById('launcher').textContent=d.launcher_exists?'Found':'Missing';document.getElementById('start').disabled=d.running||!d.launcher_exists;document.getElementById('stop').disabled=!d.running}catch(e){document.getElementById('message').textContent=e.message}}
+async function refreshLogs(){try{let d=await api('/api/logs');let el=document.getElementById('logs');let b=el.scrollTop+el.clientHeight>=el.scrollHeight-25;el.textContent=d.logs;if(b)el.scrollTop=el.scrollHeight}catch(e){}}
+async function action(n){let m=document.getElementById('message');m.textContent='';try{let d=await api('/api/'+n,'POST');m.textContent=d.message;refreshStatus();refreshLogs()}catch(e){m.textContent=e.message}}
+async function logout(){await api('/api/logout','POST');location.reload()}
+document.getElementById('sendform').addEventListener('submit',async e=>{e.preventDefault();let input=document.getElementById('sendcmd'),m=document.getElementById('sendmessage'),c=input.value.trim();if(!c)return;m.textContent='Sending…';try{let d=await api('/api/send-command','POST',{command:c});m.textContent=d.message;input.value='';refreshLogs()}catch(err){m.textContent=err.message}});
+document.getElementById('sendform').addEventListener('submit',async e=>{e.preventDefault();let input=document.getElementById('sendcmd'),out=document.getElementById('termout'),m=document.getElementById('sendmessage'),c=input.value.trim();if(!c)return;out.textContent+='\n\n> '+c+'\n';m.textContent='Sending…';try{let d=await api('/api/send-command','POST',{command:c});m.textContent=d.message;input.value='';out.textContent+='[Command delivered to run.py]';refreshLogs()}catch(err){m.textContent=err.message;out.textContent+='[Send failed: '+err.message+']'}out.scrollTop=out.scrollHeight});
+refreshStatus();refreshLogs();setInterval(refreshStatus,3000);setInterval(refreshLogs,4000);
+</script>
+{% endif %}
+</body></html>

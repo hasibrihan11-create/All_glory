@@ -1,0 +1,17 @@
+
+
+--- Started 2026-11-16 23:22:33 ---
+Traceback (most recent call last):
+  File "/storage/emulated/0/guildglory_web/run.py", line 30, in <module>
+    app = importlib.import_module('main')
+  File "/data/data/com.termux/files/usr/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1395, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 921, in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 813, in module_from_spec
+  File "<frozen importlib._bootstrap_external>", line 1317, in create_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+ImportError: dlopen failed: library "/storage/emulated/0/guildglory_web/main.cpython-313-aarch64-linux-android.so" needed or dlopened by "/data/data/com.termux/files/usr/lib/libpython3.13.so" is not accessible for the namespace "(default)"
