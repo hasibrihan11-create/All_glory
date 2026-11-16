@@ -1,3 +1,17 @@
+from pathlib import Path
+import zipfile, textwrap
+
+base = Path("/mnt/data/guildglory_web")
+app_path = base / "app.py"
+html_path = base / "templates" / "index.html"
+
+app_py = app_path.read_text(encoding="utf-8")
+# Add imports
+app_py = app_py.replace("import subprocess\n", "import subprocess\nimport shlex\n")
+# Insert command endpoint before health endpoint
+marker = "\n\n@app.get(\"/health\")\ndef health():"
+endpoint = r'''
+
 <!doctype html>
 <html lang="en">
 <head>
