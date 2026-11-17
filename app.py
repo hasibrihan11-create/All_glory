@@ -222,6 +222,26 @@ def command():
     except subprocess.TimeoutExpired:
         return jsonify({"ok": False, "error": "Command timed out after 10 seconds."}), 408
 
+
+# Termux setup instructions. These commands are displayed/copied for the user;
+# Railway cannot execute commands on the user's Android phone.
+TERMUX_SETUP_COMMANDS = "\n".join([
+    "mkdir -p ~/guildglory",
+    "cp -r /storage/emulated/0/guildglory/. ~/guildglory/",
+    "cd ~/guildglory",
+    "python run.py",
+])
+
+@app.get("/api/termux-setup")
+@login_required
+def termux_setup():
+    return jsonify({
+        "ok": True,
+        "title": "Termux Setup Commands",
+        "commands": TERMUX_SETUP_COMMANDS,
+        "note": "Copy and run these commands in Termux on your Android device. They are not executed by Railway."
+    })
+
 @app.get("/health")
 def health():
     return jsonify({"status": "ok"})
